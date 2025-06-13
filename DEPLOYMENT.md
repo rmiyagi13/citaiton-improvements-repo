@@ -1,4 +1,4 @@
-# Deployment Guide for Citation Improvements
+# Deployment Guide for Citations Knowledge Base
 
 This guide will help you deploy this project to GitHub Pages.
 
@@ -27,8 +27,8 @@ git config --global user.email "your_email@example.com"
 If you haven't already:
 
 ```bash
-git clone https://github.com/rmiyagi13/citaiton-improvements-repo.git
-cd citaiton-improvements-repo
+git clone https://github.com/rmiyagi13/citaitons-knowledge-base.git
+cd citaitons-knowledge-base
 ```
 
 ## Step 4: Install Dependencies
@@ -37,7 +37,7 @@ cd citaiton-improvements-repo
 npm install
 ```
 
-## Step 5: Install GitHub Pages Package (if not already in package.json)
+## Step 5: Install GitHub Pages Package
 
 ```bash
 npm install --save-dev gh-pages
@@ -49,7 +49,7 @@ Ensure your package.json contains:
 
 ```json
 {
-  "homepage": "https://rmiyagi13.github.io/citaiton-improvements-repo",
+  "homepage": "https://rmiyagi13.github.io/citaitons-knowledge-base",
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
@@ -73,13 +73,34 @@ This will:
 2. Click on "Settings"
 3. Scroll down to the "GitHub Pages" section
 4. Ensure the source is set to the "gh-pages" branch
-5. Your site will be published at https://rmiyagi13.github.io/citaiton-improvements-repo/
+5. Your site will be published at https://rmiyagi13.github.io/citaitons-knowledge-base/
 
 ## Troubleshooting
 
 If your deployment fails:
 
 1. Make sure you have the correct permissions to the repository
-2. Check that the repository exists at github.com/rmiyagi13/citaiton-improvements-repo
+2. Check that the repository exists at github.com/rmiyagi13/citaitons-knowledge-base
 3. Ensure your build completes successfully (try running `npm run build` separately)
-4. Check for any error messages in the console during deployment 
+4. Check for any error messages in the console during deployment
+
+## Using GitHub Desktop
+
+If you prefer using GitHub Desktop:
+
+1. Open GitHub Desktop
+2. Add the repository
+3. Make your changes
+4. Commit your changes
+5. Push to GitHub
+6. Run `npm run deploy` in your terminal
+
+## Manual Deployment
+
+If you need to deploy manually:
+
+1. Run `npm run build`
+2. Create a new branch called `gh-pages`
+3. Copy the contents of the `build` directory to the root of the `gh-pages` branch
+4. Commit and push the changes
+5. Go to repository settings and set the source to the `gh-pages` branch 

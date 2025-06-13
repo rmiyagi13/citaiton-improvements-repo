@@ -60,6 +60,9 @@ if %errorlevel% neq 0 (
 )
 echo.
 
+echo Creating .nojekyll file...
+echo. > build/.nojekyll
+
 echo Step 6: Deploying to GitHub Pages...
 call npm run deploy
 if %errorlevel% neq 0 (
@@ -75,4 +78,5 @@ echo Your site should be available at:
 echo https://rmiyagi13.github.io/citaiton-improvements-repo/
 echo.
 
+echo Done!
 pause 

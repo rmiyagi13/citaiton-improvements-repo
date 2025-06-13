@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ExternalLink, Quote, Bookmark, BookOpen, Link2, FileText, Info } from 'lucide-react';
 import { Citation } from '../types';
 
@@ -24,10 +24,49 @@ export const CitationPreview: React.FC<CitationPreviewProps> = ({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [ogMetadata, setOGMetadata] = useState<OGMetadata | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const [isHovering, setIsHovering] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout>();
-  const [shouldClose, setShouldClose] = useState(false);
-  const [isInteracting, setIsInteracting] = useState(false);
 
+  // Clear any existing timeout
+  const clearCloseTimeout = useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = undefined;
+    }
+  }, []);
+
+  // Handle mouse movement
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!tooltipRef.current || isHovering) return;
+
+      const tooltip = tooltipRef.current;
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const safeZone = 150; // Large safe zone
+
+      const isInSafeZone = 
+        e.clientX >= tooltipRect.left - safeZone &&
+        e.clientX <= tooltipRect.right + safeZone &&
+        e.clientY >= tooltipRect.top - safeZone &&
+        e.clientY <= tooltipRect.bottom + safeZone;
+
+      clearCloseTimeout();
+
+      if (!isInSafeZone) {
+        closeTimeoutRef.current = setTimeout(() => {
+          onClose();
+        }, 2000); // Long timeout
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      clearCloseTimeout();
+    };
+  }, [onClose, isHovering, clearCloseTimeout]);
+
+  // Fetch metadata
   useEffect(() => {
     const fetchOGMetadata = async () => {
       if (citation.source.url) {
@@ -64,48 +103,6 @@ export const CitationPreview: React.FC<CitationPreviewProps> = ({
     fetchOGMetadata();
   }, [citation.source.url]);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!tooltipRef.current || shouldClose) return;
-
-      const tooltip = tooltipRef.current;
-      const tooltipRect = tooltip.getBoundingClientRect();
-      const safeZone = 40;
-
-      const isInSafeZone = 
-        e.clientX >= tooltipRect.left - safeZone &&
-        e.clientX <= tooltipRect.right + safeZone &&
-        e.clientY >= tooltipRect.top - safeZone &&
-        e.clientY <= tooltipRect.bottom + safeZone;
-
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
-
-      if (!isInSafeZone && !isInteracting) {
-        closeTimeoutRef.current = setTimeout(() => {
-          setShouldClose(true);
-          onClose();
-        }, 300);
-      }
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
-    };
-  }, [onClose, shouldClose, isInteracting]);
-
-  const handleTooltipInteraction = (interacting: boolean) => {
-    setIsInteracting(interacting);
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-    }
-  };
-
   const getSourceIcon = (url: string) => {
     if (url.includes('book')) return BookOpen;
     if (url.includes('article')) return FileText;
@@ -114,7 +111,7 @@ export const CitationPreview: React.FC<CitationPreviewProps> = ({
 
   const SourceIcon = citation.source.url ? getSourceIcon(citation.source.url) : Link2;
 
-  if (!isVisible || shouldClose) return null;
+  if (!isVisible) return null;
 
   return (
     <div
@@ -125,8 +122,13 @@ export const CitationPreview: React.FC<CitationPreviewProps> = ({
         left: position.x + 'px',
         transform: `translate(-50%, -100%) translateY(-8px)`,
       }}
-      onMouseEnter={() => handleTooltipInteraction(true)}
-      onMouseLeave={() => handleTooltipInteraction(false)}
+      onMouseEnter={() => {
+        setIsHovering(true);
+        clearCloseTimeout();
+      }}
+      onMouseLeave={() => {
+        setIsHovering(false);
+      }}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="p-3 bg-white rounded-lg space-y-2">
@@ -152,7 +154,7 @@ export const CitationPreview: React.FC<CitationPreviewProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end space-x-2 pt-1">
+        <div className="flex items-center justify-end space-x-2 pt-2">
           <button
             className="p-1 rounded-md bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors text-xs flex items-center"
             onClick={(e) => {
