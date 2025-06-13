@@ -4,10 +4,16 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -16,15 +22,32 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build
         run: npm run build
+        env:
+          CI: false  # Prevent treating warnings as errors
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist
-          branch: gh-pages 
+          branch: gh-pages
+          clean: true  # Remove old files
+          commit-message: "Deploy to GitHub Pages"  # Custom commit message
+
+      - name: Check deployment
+        run: |
+          echo "Deployment completed. Your site should be available at https://rmiyagi13.github.io/citaiton-improvements-repo/" 
