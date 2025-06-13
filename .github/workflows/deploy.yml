@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - gh-pages
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
@@ -17,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: gh-pages  # Checkout the gh-pages branch
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -47,6 +50,7 @@ jobs:
           branch: gh-pages
           clean: true  # Remove old files
           commit-message: "Deploy to GitHub Pages"  # Custom commit message
+          single-commit: true  # Create a single commit instead of multiple commits
 
       - name: Check deployment
         run: |
