@@ -9,8 +9,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v3
@@ -19,19 +19,33 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
 
-      - name: Install and Build 🔧
+      - name: Debug Info
         run: |
-          npm ci
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+
+      - name: Install Dependencies
+        run: |
+          npm install
+          echo "Installed dependencies"
+          ls -la node_modules
+
+      - name: Build
+        run: |
           npm run build
+          echo "Build completed"
+          ls -la dist || echo "dist directory not found!"
         env:
           CI: false
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           folder: dist
           branch: gh-pages
-          clean: true
-          single-commit: true 
+          clean: true 
